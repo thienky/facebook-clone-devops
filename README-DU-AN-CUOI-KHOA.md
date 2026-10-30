@@ -1,7 +1,5 @@
 # Dự án cuối khóa DevOps — Facebook Clone (đủ 3 tầng + DevOps)
 
-Tài liệu đề: `14-01-2026-04-46-05-du-an-cuoi-khoa.pdf`  
-Mẫu triển khai: [vulebaolong/devops_04](https://github.com/vulebaolong/devops_04)
 
 ## Kiến trúc (đúng tinh thần đề bài)
 
