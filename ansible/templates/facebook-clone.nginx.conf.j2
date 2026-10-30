@@ -1,0 +1,33 @@
+server {
+    listen 80;
+    server_name {{ server_name | default('_') }};
+
+    # Frontend React (Docker port 3001)
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Backend NestJS API
+    location ~ ^/(backend|home|uploads|api) {
+        proxy_pass http://127.0.0.1:3301;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Grafana (tuỳ chọn reverse proxy)
+    location /grafana/ {
+        proxy_pass http://127.0.0.1:3000/;
+        proxy_set_header Host $host;
+    }
+}

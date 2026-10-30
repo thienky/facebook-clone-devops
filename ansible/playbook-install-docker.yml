@@ -1,0 +1,85 @@
+- name: Install Docker Engine
+  hosts: myhosts
+  become: true
+
+  tasks:
+      - name: Remove conflicting packages
+        ansible.builtin.apt:
+            name:
+                - docker.io
+                - docker-compose
+                - docker-compose-v2
+                - docker-doc
+                - docker-buildx
+                - podman-docker
+                - containerd
+                - runc
+            state: absent
+
+      - name: Install required packages
+        ansible.builtin.apt:
+            name:
+                - ca-certificates
+                - curl
+                - git
+                - python3-debian
+            state: present
+            update_cache: true
+
+      - name: Create APT keyrings directory
+        ansible.builtin.file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: "0755"
+
+      - name: Download Docker GPG key
+        ansible.builtin.get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /etc/apt/keyrings/docker.asc
+            mode: "0644"
+
+      - name: Add Docker APT repository
+        ansible.builtin.deb822_repository:
+            name: docker
+            types:
+                - deb
+            uris: https://download.docker.com/linux/ubuntu
+            suites:
+                - "{{ ansible_distribution_release }}"
+            components:
+                - stable
+            architectures:
+                - amd64
+            signed_by: /etc/apt/keyrings/docker.asc
+            state: present
+
+      - name: Update APT cache
+        ansible.builtin.apt:
+            update_cache: true
+
+      - name: Install Docker packages
+        ansible.builtin.apt:
+            name:
+                - docker-ce
+                - docker-ce-cli
+                - containerd.io
+                - docker-buildx-plugin
+                - docker-compose-plugin
+            state: present
+
+      - name: Ensure Docker service is running
+        ansible.builtin.service:
+            name: docker
+            state: started
+            enabled: true
+
+      - name: Add ubuntu user to docker group
+        ansible.builtin.user:
+            name: ubuntu
+            groups: docker
+            append: true
+
+      - name: Verify Docker installation
+        ansible.builtin.command:
+            cmd: docker run --rm hello-world
+        changed_when: false

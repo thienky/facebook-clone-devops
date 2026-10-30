@@ -1,0 +1,181 @@
+# Stack đầy đủ: FE React + BE NestJS + PostgreSQL + Monitoring (Grafana/Prometheus)
+# Chạy: docker compose up -d --build
+
+name: facebook-clone-devops
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: postgres-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: facebook_clone
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d facebook_clone"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9200 >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbituser
+      RABBITMQ_DEFAULT_PASS: rabbitpassword
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  facebook_clone_api:
+    build:
+      context: ./facebook-clone-core
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        BUILD_REVISION: ${BUILD_REVISION:-local}
+    image: facebook_clone_api_image:latest
+    container_name: facebook_clone_api
+    restart: unless-stopped
+    ports:
+      - "3301:3301"
+    env_file:
+      - ./facebook-clone-core/.env.production
+    environment:
+      PORT: "3301"
+      NODE_ENV: production
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3301/home').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 90s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+  facebook_clone_fe:
+    build:
+      context: ./facebook-clone-fe
+      dockerfile: Dockerfile
+    image: facebook_clone_fe_image:latest
+    container_name: facebook_clone_fe
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      facebook_clone_api:
+        condition: service_healthy
+
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: postgres_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://admin:admin@postgres-db:5432/facebook_clone?sslmode=disable
+    ports:
+      - "9187:9187"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: prometheus
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - postgres_exporter
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:v1.9.0
+    container_name: node_exporter
+    restart: unless-stopped
+    profiles: ["linux-host"]
+    command:
+      - "--path.rootfs=/host"
+    network_mode: host
+    pid: host
+    volumes:
+      - "/:/host:ro,rslave"
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:
+  rabbitmq_data:
+  prometheus-data:
+  grafana-data:

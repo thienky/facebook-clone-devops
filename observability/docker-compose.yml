@@ -1,0 +1,48 @@
+# Chạy riêng monitoring trên VPS (Linux): docker compose --profile linux-host up -d
+# Trên Windows Docker Desktop có thể bỏ profile linux-host.
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: prometheus
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:v1.9.0
+    container_name: node_exporter
+    restart: unless-stopped
+    profiles: ["linux-host"]
+    command:
+      - "--path.rootfs=/host"
+    network_mode: host
+    pid: host
+    volumes:
+      - "/:/host:ro,rslave"
+
+volumes:
+  grafana-data:
+  prometheus-data:

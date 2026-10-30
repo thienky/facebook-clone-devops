@@ -1,0 +1,39 @@
+- name: Install Jenkins on Ubuntu
+  hosts: myhosts
+  become: true
+
+  tasks:
+      - name: Install Java and dependencies
+        ansible.builtin.apt:
+            name:
+                - fontconfig
+                - openjdk-21-jre
+            state: present
+            update_cache: true
+
+      - name: Add Jenkins apt key
+        ansible.builtin.apt_key:
+            url: https://pkg.jenkins.io/debian/jenkins.io-2023.key
+            state: present
+
+      - name: Add Jenkins repository
+        ansible.builtin.apt_repository:
+            repo: deb https://pkg.jenkins.io/debian binary/
+            state: present
+            filename: jenkins
+
+      - name: Install Jenkins
+        ansible.builtin.apt:
+            name: jenkins
+            state: present
+            update_cache: true
+
+      - name: Ensure Jenkins is running
+        ansible.builtin.service:
+            name: jenkins
+            state: started
+            enabled: true
+
+      - name: Show initial admin password hint
+        ansible.builtin.debug:
+            msg: "Đọc mật khẩu admin: sudo cat /var/lib/jenkins/secrets/initialAdminPassword trên VPS"

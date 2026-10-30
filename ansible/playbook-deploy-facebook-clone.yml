@@ -1,0 +1,48 @@
+- name: Deploy Facebook Clone with Docker Compose
+  hosts: myhosts
+  become: true
+  vars:
+      app_dir: /home/ubuntu/facebook-clone-core
+      repo_url: "{{ git_repo_url | default('https://github.com/YOUR_USER/facebook-clone-core.git') }}"
+      repo_branch: "{{ git_branch | default('main') }}"
+
+  tasks:
+      - name: Ensure application directory exists
+        ansible.builtin.file:
+            path: "{{ app_dir }}"
+            state: directory
+            owner: ubuntu
+            group: ubuntu
+            mode: "0755"
+
+      - name: Clone or update repository
+        become_user: ubuntu
+        ansible.builtin.git:
+            repo: "{{ repo_url }}"
+            dest: "{{ app_dir }}"
+            version: "{{ repo_branch }}"
+            force: true
+
+      - name: Check env file on server
+        ansible.builtin.stat:
+            path: "{{ app_dir }}/facebook-clone-core/.env.production"
+        register: env_file
+
+      - name: Fail if missing production env
+        ansible.builtin.fail:
+            msg: "Thiếu facebook-clone-core/.env.production trên VPS — tạo file trước khi deploy."
+        when: not env_file.stat.exists
+
+      - name: Build and start stack
+        become_user: ubuntu
+        ansible.builtin.command:
+            cmd: docker compose up -d --build
+            chdir: "{{ app_dir }}"
+        changed_when: true
+
+      - name: Start observability stack
+        become_user: ubuntu
+        ansible.builtin.command:
+            cmd: docker compose up -d
+            chdir: "{{ app_dir }}/observability"
+        changed_when: true

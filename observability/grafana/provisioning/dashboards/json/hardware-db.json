@@ -1,0 +1,66 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU usage",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU (Node Exporter)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+          "legendFormat": "RAM used",
+          "refId": "A"
+        }
+      ],
+      "title": "RAM (Node Exporter)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "pg_up",
+          "legendFormat": "PostgreSQL up",
+          "refId": "A"
+        },
+        {
+          "expr": "pg_stat_database_numbackends{datname=\"facebook_clone\"}",
+          "legendFormat": "Connections",
+          "refId": "B"
+        }
+      ],
+      "title": "PostgreSQL (postgres_exporter)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["devops", "facebook-clone"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Hardware & Database",
+  "uid": "fb-clone-hw-db",
+  "version": 1
+}

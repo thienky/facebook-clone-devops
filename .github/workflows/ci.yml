@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+env:
+  APP_DIR: facebook-clone-core
+  FE_DIR: facebook-clone-fe
+  API_IMAGE: facebook_clone_api_image:latest
+  FE_IMAGE: facebook_clone_fe_image:latest
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Dockerfiles
+        run: |
+          test -f $APP_DIR/Dockerfile
+          test -f $FE_DIR/Dockerfile
+          test -f docker-compose.yml
+
+      - name: Build API image
+        run: docker build -t $API_IMAGE -f $APP_DIR/Dockerfile --target runtime $APP_DIR
+
+      - name: Build FE image
+        run: docker build -t $FE_IMAGE -f $FE_DIR/Dockerfile --build-arg VITE_API_URL=http://localhost:3301 $FE_DIR
+
+      - name: Run backend unit tests
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          npm ci
+          npm test -- --passWithNoTests
+
+      - name: Build frontend (TypeScript)
+        working-directory: ${{ env.FE_DIR }}
+        run: |
+          npm ci
+          npm run build
