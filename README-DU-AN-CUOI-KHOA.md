@@ -1,7 +1,5 @@
-# Dự án cuối khóa DevOps — Facebook Clone (đủ 3 tầng + DevOps)
+# Dự án cuối khóa DevOps — Facebook Clone 
 
-Tài liệu đề: `14-01-2026-04-46-05-du-an-cuoi-khoa.pdf`  
-Mẫu triển khai: [vulebaolong/devops_04](https://github.com/vulebaolong/devops_04)
 
 ## Kiến trúc (đúng tinh thần đề bài)
 
@@ -11,9 +9,9 @@ Mẫu triển khai: [vulebaolong/devops_04](https://github.com/vulebaolong/devop
 | Backend | NestJS (API) | `facebook-clone-core/` |
 | Database | PostgreSQL (+ Redis, ES, RabbitMQ) | `docker-compose.yml` |
 
-Đề mẫu dùng Express + MongoDB; dự án này dùng **NestJS + PostgreSQL** (được phép nếu FULL stack và triển khai end-to-end). Giám sát DB qua **postgres_exporter**.
 
-## Checklist yêu cầu đề
+
+
 
 | Yêu cầu | File / lệnh |
 |---------|-------------|
@@ -23,8 +21,6 @@ Mẫu triển khai: [vulebaolong/devops_04](https://github.com/vulebaolong/devop
 | Grafana + Prometheus (CPU/RAM + DB) | `docker-compose.yml` (grafana/prometheus), dashboard `observability/grafana/...` |
 | Terraform tạo VPS | `terraform/create-ec2/` |
 | Ansible cài đặt + deploy | `ansible/` (+ Jenkins: `playbook-install-jenkins.yml`) |
-
-## Flow: Localhost → Docker Desktop → VPS
 
 ### 1. Localhost (dev)
 
@@ -87,6 +83,4 @@ ansible-playbook -i inventory.ini playbook-deploy-facebook-clone.yml -e "git_rep
 | `VITE_API_URL` | URL API bake vào FE lúc build (VD: `http://103.x.x.x:3301`). Dockerfile cũng nhận `NEXT_PUBLIC_API_URL`. |
 | `DOCKER_USER`, `DOCKER_PASS` | Push Docker Hub |
 
-## Nộp bài
-
-Push **toàn bộ repo** lên GitHub (app + DevOps) và nộp link trên hệ thống Cybersoft.
+.
