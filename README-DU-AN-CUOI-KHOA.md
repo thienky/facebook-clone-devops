@@ -1,11 +1,13 @@
 # Dự án cuối khóa DevOps — Facebook Clone (đủ 3 tầng + DevOps)
 
+Tài liệu đề: `14-01-2026-04-46-05-du-an-cuoi-khoa.pdf`  
+Mẫu triển khai: [vulebaolong/devops_04](https://github.com/vulebaolong/devops_04)
 
 ## Kiến trúc (đúng tinh thần đề bài)
 
 | Tầng | Công nghệ | Thư mục |
 |------|-----------|---------|
-| Frontend | React + Vite + Axios | `facebook-clone-fe/` |
+| Frontend | Next.js (App Router) | `facebook-clone-fe/` |
 | Backend | NestJS (API) | `facebook-clone-core/` |
 | Database | PostgreSQL (+ Redis, ES, RabbitMQ) | `docker-compose.yml` |
 
@@ -34,11 +36,11 @@ npm ci && npm run start:dev
 
 # Frontend (terminal khác)
 cd facebook-clone-fe
-cp .env.example .env
+cp .env.example .env.local
 npm ci && npm run dev
 ```
 
-- FE: http://localhost:5173  
+- FE: http://localhost:3000  
 - API: http://localhost:3301 — Swagger: http://localhost:3301/api  
 
 ### 2. Docker Desktop (full stack)
@@ -51,7 +53,7 @@ cd ..
 docker compose up -d --build
 ```
 
-- FE: http://localhost:3001 (Axios gọi API qua Nginx cùng origin — mở bằng IP LAN/VPS vẫn được)  
+- FE: http://localhost:3001 (Next.js; trình duyệt gọi API theo `NEXT_PUBLIC_API_URL`, mặc định `http://localhost:3301`)  
 - API trực tiếp: http://localhost:3301  
 - Grafana: http://localhost:3000 (admin / admin)  
 - Prometheus: http://localhost:9090  
@@ -82,7 +84,7 @@ ansible-playbook -i inventory.ini playbook-deploy-facebook-clone.yml -e "git_rep
 |--------|----------|
 | `SSH_KEY`, `SSH_USER`, `IP_SERVER_RUN` | Production CD |
 | `SSH_KEY_STAGING`, `SSH_USER_STAGING`, `SSH_IP_STAGING` | Staging CD |
-| `VITE_API_URL` | URL API khi build FE (VD: `http://103.x.x.x:3301`) |
+| `VITE_API_URL` | URL API bake vào FE lúc build (VD: `http://103.x.x.x:3301`). Dockerfile cũng nhận `NEXT_PUBLIC_API_URL`. |
 | `DOCKER_USER`, `DOCKER_PASS` | Push Docker Hub |
 
 ## Nộp bài

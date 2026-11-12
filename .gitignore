@@ -1,7 +1,12 @@
 **/.git.bak/
 facebook-clone-devops/
 facebook-clone-devops.tgz
+facebook-project-main/
+*.zip
 *.tgz
+**/*.msg
+facebook-clone-core/src/keys.7z
+facebook-clone-core/src/keys/
 ansible/devops.pem
 **/.env
 !**/.env.example

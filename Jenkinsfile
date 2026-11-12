@@ -27,7 +27,7 @@ pipeline {
         stage('Build FE Image') {
             steps {
                 dir('facebook-clone-fe') {
-                    sh 'docker build -t ${FE_IMAGE} -f Dockerfile --build-arg VITE_API_URL=http://YOUR_VPS_IP:3301 .'
+                    sh 'docker build -t ${FE_IMAGE} -f Dockerfile --build-arg NEXT_PUBLIC_API_URL=http://YOUR_VPS_IP:3301 .'
                 }
             }
         }

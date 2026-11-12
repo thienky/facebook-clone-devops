@@ -46,7 +46,7 @@ jobs:
       - run: docker build -t $API_IMAGE -f $APP_DIR/Dockerfile --target runtime $APP_DIR
       - run: |
           docker build -t $FE_IMAGE -f $FE_DIR/Dockerfile \
-            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL_STAGING }} \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.VITE_API_URL_STAGING }} \
             $FE_DIR
       - run: |
           docker save $API_IMAGE | gzip | ssh $SSH_SERVER "gunzip | docker load"

@@ -1,4 +1,4 @@
-# Stack đầy đủ: FE React + BE NestJS + PostgreSQL + Monitoring (Grafana/Prometheus)
+# Stack đầy đủ: FE Next.js + BE NestJS + PostgreSQL + Monitoring (Grafana/Prometheus)
 # Chạy: docker compose up -d --build
 
 name: facebook-clone-devops
@@ -106,11 +106,17 @@ services:
     build:
       context: ./facebook-clone-fe
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3301}
     image: facebook_clone_fe_image:latest
     container_name: facebook_clone_fe
     restart: unless-stopped
     ports:
-      - "3001:80"
+      - "3001:3000"
+    environment:
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NODE_ENV: production
     depends_on:
       facebook_clone_api:
         condition: service_healthy

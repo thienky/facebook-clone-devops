@@ -1,4 +1,8 @@
 node_modules
-dist
+.next
+out
+.git
+*.md
 .env
-.env.local
+.env.*
+!.env.example
