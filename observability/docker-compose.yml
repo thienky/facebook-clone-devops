@@ -1,5 +1,4 @@
-# Chạy riêng monitoring trên VPS (Linux): docker compose --profile linux-host up -d
-# Trên Windows Docker Desktop có thể bỏ profile linux-host.
+
 
 services:
   prometheus:
